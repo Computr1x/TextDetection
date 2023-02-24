@@ -45,9 +45,10 @@ def main():
     dataset_test = TextCocoDataset('./data/TextDataset', get_transform(train=False))
 
     # split the dataset in train and test set
-    indices = torch.randperm(len(dataset)).tolist()
-    dataset = torch.utils.data.Subset(dataset, indices[:-50])
-    dataset_test = torch.utils.data.Subset(dataset_test, indices[-50:])
+    train_size = int(len(dataset) * 0.8)
+    test_size = len(dataset) - train_size
+    dataset = torch.utils.data.Subset(dataset, range(train_size))
+    dataset_test = torch.utils.data.Subset(dataset_test, range(train_size, train_size + test_size))
 
     # define training and validation data loaders
     data_loader = torch.utils.data.DataLoader(

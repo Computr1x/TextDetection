@@ -4,7 +4,7 @@ import numpy as np
 import numpy.lib.recfunctions as nlr
 import torch
 from distinctipy import distinctipy
-from torch.utils.data import  Dataset
+from torch.utils.data import Dataset
 from PIL import Image, ImageDraw
 
 
