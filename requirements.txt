@@ -1,0 +1,7 @@
+distinctipy==1.2.2
+pycocotools==2.0.6
+-i https://download.pytorch.org/whl/nightly/cpu
+torch==2.0.0.dev20230224+cpu
+torchvision==0.15.0.dev20230224+cpu
+numpy==1.24.2
+Pillow==9.4.0
