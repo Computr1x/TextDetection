@@ -34,7 +34,8 @@ def get_instance_segmentation_model(num_classes):
 
     return model
 
-def main():
+
+def train(path):
     # train on the GPU or on the CPU, if a GPU is not available
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
@@ -62,9 +63,6 @@ def main():
     # get the model using our helper function
     model = get_instance_segmentation_model(num_classes)
 
-    # move model to the right device
-    model.to(device)
-
     # construct an optimizer
     params = [p for p in model.parameters() if p.requires_grad]
     optimizer = torch.optim.SGD(params, lr=0.005,
@@ -73,23 +71,43 @@ def main():
     lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer,
                                                    step_size=3,
                                                    gamma=0.1)
+    models_path = "./data/Models/"
+    path = models_path + path
 
-    # let's train it for 10 epochs
+    # if models exist - continue training
+    if os.path.isfile(path):
+        checkpoint = torch.load(path)
+        model.load_state_dict(checkpoint['model_state_dict'])
+        optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+        start_epoch = checkpoint['epoch']
+    else:
+        start_epoch = 0
+
+    # move model to the right device
+    model.to(device)
+    # ensure module in train mode
+    model.train()
+
+    # let's train
     num_epochs = 10
-
-    for epoch in range(num_epochs):
+    for epoch in range(start_epoch, num_epochs):
         # train for one epoch, printing every 10 iterations
         train_one_epoch(model, optimizer, data_loader, device, epoch, print_freq=10)
         # update the learning rate
         lr_scheduler.step()
+
+        # save model
+        torch.save({
+            'epoch': epoch,
+            'model_state_dict':  model.state_dict(),
+            'optimizer_state_dict': optimizer.state_dict(),
+        }, path)
         # evaluate on the test dataset
         evaluate(model, data_loader_test, device=device)
-
-    torch.save(model.state_dict(), "./Models/" + str(int(round(time.time() * 1000))) + ".pt")
 
     print("Train complete!")
 
 
 if __name__ == '__main__':
-    main()
+    train("model.pt")
 

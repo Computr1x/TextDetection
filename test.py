@@ -22,21 +22,28 @@ def main():
 
     # move the input and model to GPU for speed if available
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
-    if torch.cuda.is_available():
-        input_batch = input_batch.to(device)
-        model.to(device)
+    input_batch = input_batch.to(device)
+    model.to(device)
 
-    model.load_state_dict(torch.load("./data/Models/model.pt"))
+    checkpoint = torch.load("./data/Models/model.pt")
+    if "model_state_dict" in checkpoint:
+        model.load_state_dict(checkpoint["model_state_dict"])
+    else:
+        model.load_state_dict(checkpoint)
     model.eval()
 
     with torch.no_grad():
         prediction = model(input_batch)
 
     mask_and_scores = list(filter(lambda tup: tup[1] >= 0.9, zip(prediction[0]['masks'], prediction[0]['scores'])))
+    if len(mask_and_scores) == 0:
+        print("Text on image not found")
+        return
     result_mask = mask_and_scores[0][0]
     for (mask, score) in mask_and_scores[1:]:
         result_mask += mask
-    Image.fromarray(np.clip(result_mask, 0, 1).mul(255).permute(1, 2, 0).byte().numpy().squeeze()).show()
+    Image.fromarray(np.clip(result_mask, 0, 1).data.mul(255).permute(1, 2, 0).byte().numpy().squeeze()).show()
+
 
 if __name__ == '__main__':
     main()
